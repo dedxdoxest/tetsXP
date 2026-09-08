@@ -22,7 +22,6 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                implementation("com.github.oshai:kotlin-logging-jvm:5.1.0")
                 // Bouncy Castle для криптографии
                 implementation("org.bouncycastle:bcprov-jdk15on:1.70")
             }

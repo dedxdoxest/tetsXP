@@ -82,9 +82,6 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // Logging
-    implementation("com.github.oshai:kotlin-logging-jvm:5.1.0")
-
     // Для отладки UI
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

@@ -148,9 +148,125 @@ class StorageRepositoryImpl(
         return token.concatToString().take(16).chunked(4).joinToString("-")
     }
     
+    /**
+     * Сериализация хранилища в бинарный формат файла:
+     * [Заголовок (публичный)] + [Манифест (шифрованный)] + [Блобы записей]
+     */
     private fun serializeStorage(storage: Storage, storageKey: ByteArray): ByteArray {
-        // TODO: Сериализация в бинарный формат
-        // [Заголовок] + [Манифест] + [Блобы записей]
-        return byteArrayOf()
+        // Заголовок (публичный)
+        val header = Header(
+            storageId = storage.id,
+            kdfParams = KdfParams(
+                saltHex = storage.kdfParams.salt.toHex()
+            ),
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+        
+        // Манифест
+        val manifest = Manifest(
+            storageKeyWrapped = storage.wrappedStorageKey.map { (participantId, wrappedKey) ->
+                WrappedKey(
+                    participantId = participantId,
+                    wrappedKeyHex = wrappedKey.toHex(),
+                    nonceHex = "" // TODO: сохранить nonce
+                )
+            },
+            entries = storage.entries.map { (entryId, entry) ->
+                EntryMeta(
+                    id = entryId,
+                    ownerParticipantId = entry.ownerId,
+                    keyWrappers = entry.acl.map { (targetId, _) ->
+                        KeyWrapper(
+                            targetId = targetId,
+                            targetType = "participant", // TODO: определить тип
+                            wrappedKeyHex = entry.key.toHex(), // TODO: обернуть ключ
+                            nonceHex = ""
+                        )
+                    },
+                    isDeleted = false,
+                    updatedAt = entry.modifiedAt
+                )
+            },
+            groups = storage.groups.map { (groupId, group) ->
+                GroupMeta(
+                    id = groupId,
+                    name = group.name,
+                    memberIds = group.memberIds
+                )
+            }
+        )
+        
+        // Шифрование манифеста ключом хранилища
+        val manifestJson = StorageSerializer.manifestToJson(manifest)
+        val encryptedManifest = cryptoProvider.encrypt(manifestJson.encodeToByteArray(), storageKey)
+        
+        // Блобы записей
+        val entryBlobs = storage.entries.map { (entryId, entry) ->
+            val content = EntryContent(
+                name = entry.name,
+                login = entry.login,
+                password = entry.password,
+                url = entry.url,
+                notes = entry.notes,
+                totpSecret = entry.totpSecret
+            )
+            val contentJson = StorageSerializer.entryContentToJson(content)
+            val encrypted = cryptoProvider.encrypt(contentJson.encodeToByteArray(), entry.key)
+            EncryptedEntry(
+                id = entryId,
+                ciphertextHex = encrypted.ciphertext.toHex(),
+                nonceHex = encrypted.nonce.toHex(),
+                authTagHex = encrypted.tag.toHex()
+            )
+        }
+        
+        // Сборка файла в бинарный формат
+        return buildFile(header, encryptedManifest, entryBlobs)
+    }
+    
+    private fun buildFile(header: Header, encryptedManifest: EncryptedData, entryBlobs: List<EncryptedEntry>): ByteArray {
+        // Простая бинарная структура:
+        // [4 байта: длина header] [header JSON]
+        // [4 байта: длина manifest blob] [manifest blob]
+        // [4 байта: кол-во entry blobs]
+        //   для каждого: [4 байта: длина] [blob]
+        
+        val headerJson = StorageSerializer.headerToJson(header).encodeToByteArray()
+        val manifestBlob = encryptedManifest.ciphertext
+        
+        val outputStream = java.io.ByteArrayOutputStream()
+        val buffer = java.nio.ByteBuffer.allocate(4).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        
+        // Запись header
+        buffer.putInt(headerJson.size)
+        outputStream.write(buffer.array())
+        outputStream.write(headerJson)
+        
+        // Запись manifest
+        buffer.putInt(0).also { buffer.clear() }
+        buffer.putInt(manifestBlob.size)
+        outputStream.write(buffer.array())
+        outputStream.write(manifestBlob)
+        
+        // Запись entry blobs
+        buffer.putInt(0).also { buffer.clear() }
+        buffer.putInt(entryBlobs.size)
+        outputStream.write(buffer.array())
+        
+        for (blob in entryBlobs) {
+            val blobBytes = StorageSerializer.json.encodeToString(blob).encodeToByteArray()
+            buffer.putInt(0).also { buffer.clear() }
+            buffer.putInt(blobBytes.size)
+            outputStream.write(buffer.array())
+            outputStream.write(blobBytes)
+        }
+        
+        return outputStream.toByteArray()
+    }
+    
+    private fun deriveKekFromParticipant(storage: Storage, participantId: String): ByteArray {
+        // TODO: Получить KEK участника из wrappedKek или из токена
+        TODO("KEK derivation")
     }
 }

@@ -16,50 +16,44 @@ data class Header(
     val magic: String = "HPDB",
     val version: Int = 1,
     val storageId: String,
-    val kdfParams: KdfParams,
+    val memoryKb: Int = 65536,
+    val iterations: Int = 3,
+    val parallelism: Int = 4,
+    val saltHex: String,
     val encryptionAlgorithm: String = "AES-256-GCM",
     val createdAt: Long,
     val updatedAt: Long
 )
 
 @Serializable
-data class KdfParams(
-    val algorithm: String = "Argon2id",
-    val memoryKb: Int = 65536,      // 64 MB
-    val iterations: Int = 3,
-    val parallelism: Int = 4,
-    val saltHex: String             // 16 байт
-)
-
-@Serializable
 data class Manifest(
-    val storageKeyWrapped: List<WrappedKey>,  // Ключ хранилища, обёрнутый для каждого участника
-    val entries: List<EntryMeta>,             // Метаданные записей (но не содержимое!)
-    val groups: List<GroupMeta>               // Группы участников
+    val storageKeyWrapped: List<WrappedKey>,
+    val entries: List<EntryMeta>,
+    val groups: List<GroupMeta>
 )
 
 @Serializable
 data class WrappedKey(
     val participantId: String,
-    val wrappedKeyHex: String,    // KEK участника шифрует ключ хранилища
-    val nonceHex: String
+    val wrappedKeyHex: String,
+    val nonceHex: String = ""
 )
 
 @Serializable
 data class EntryMeta(
     val id: String,
     val ownerParticipantId: String,
-    val keyWrappers: List<KeyWrapper>,  // Кто может расшифровать эту запись
-    val isDeleted: Boolean = false,     // Tombstone
+    val keyWrappers: List<KeyWrapper>,
+    val isDeleted: Boolean = false,
     val updatedAt: Long
 )
 
 @Serializable
 data class KeyWrapper(
-    val targetId: String,         // ID участника или группы
-    val targetType: String,       // "participant" или "group"
-    val wrappedKeyHex: String,    // Ключ записи, обёрнутый KEK цели
-    val nonceHex: String
+    val targetId: String,
+    val targetType: String,
+    val wrappedKeyHex: String,
+    val nonceHex: String = ""
 )
 
 @Serializable
@@ -75,17 +69,23 @@ data class GroupMeta(
 @Serializable
 data class EntryContent(
     val name: String,
-    val login: String?,
-    val password: String?,
-    val url: String?,
-    val notes: String?,
-    val totpSecret: String?,
+    val login: String? = null,
+    val password: String? = null,
+    val url: String? = null,
+    val notes: String? = null,
+    val totpSecret: String? = null,
     val customFields: Map<String, String>? = null
 )
 
 /**
- * Зашифрованный блоб записи
+ * Зашифрованный блоб
  */
+data class EncryptedData(
+    val ciphertext: ByteArray,
+    val nonce: ByteArray,
+    val tag: ByteArray
+)
+
 @Serializable
 data class EncryptedEntry(
     val id: String,
@@ -108,4 +108,7 @@ object StorageSerializer {
     
     fun entryContentToJson(content: EntryContent): String = json.encodeToString(content)
     fun entryContentFromJson(jsonStr: String): EntryContent = json.decodeFromString(jsonStr)
+    
+    fun encryptedEntryToJson(entry: EncryptedEntry): String = json.encodeToString(entry)
+    fun encryptedEntryFromJson(jsonStr: String): EncryptedEntry = json.decodeFromString(jsonStr)
 }
