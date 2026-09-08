@@ -1,5 +1,131 @@
-node_modules/
-.next/
-dist/
+```
+# Gradle
+.gradle/
 build/
+!gradle/wrapper/gradle-wrapper.properties
+
+# Android
+*.apk
+*.aar
+*.jar
+*.so
+*.dex
+*/build/
+local.properties
+captures/
+
+# Kotlin
+*.kotlin_metadata
+
+# Dependencies
+node_modules/
+vendor/
+
+# Logs
 *.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env*
+!.env.example
+
+# IDE
+.idea/
+*.iml
+*.iws
+.vscode/
+
+# Backup files
+*~
+*.bak
+*.swp
+
+# Testing
+test-results/
+coverage/
+
+# Distribution
+dist/
+target/
+
+# Python (if applicable)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# Node (if applicable)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ruby (if applicable)
+*.gem
+*.rbc
+.bundle/
+.config/
+vendor/bundle/
+vendor/cache/
+vendor/gems/
+vendor/ruby/
+
+# Go (if applicable)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.prof
+cover.out
+coverage.html
+coverage.txt
+go.sum
+
+# Java (if applicable)
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+hs_err_pid*
+
+# C/C++ (if applicable)
+*.o
+*.a
+*.obj
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Compressed files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.gz
+*.rar
+*.7z
+*.bz2
+*.xz
+*.Z
+*.lz
+*.lzo
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+```.next/
