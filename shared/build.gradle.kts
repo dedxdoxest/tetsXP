@@ -15,16 +15,16 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                // Криптография
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-                // Для Argon2id, AES-GCM, XChaCha20-Poly1305 будем использовать expect/actual
-                // В commonOnly - интерфейсы и модели
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.0")
             }
         }
         val androidMain by getting {
             dependencies {
-                // Реализация криптографии для Android
                 implementation("com.github.oshai:kotlin-logging-jvm:5.1.0")
+                // Bouncy Castle для криптографии
+                implementation("org.bouncycastle:bcprov-jdk15on:1.70")
             }
         }
     }
