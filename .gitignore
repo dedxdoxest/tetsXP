@@ -1,38 +1,57 @@
 ```
-# Gradle
+# Kotlin/Multiplatform specific
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.properties
+*.class
+*.jar
+*.war
+*.ear
+*.klib
 
-# Android
+# Android specific
 *.apk
-*.ap_
-*.aab
 *.aar
 *.dex
+
+# General build artifacts
+*.o
+*.obj
 *.so
-*.jar
-*.class
+*.dll
+*.dylib
+*.exe
+*.out
 
-# IDE
-.idea/
-*.iml
-*.ipr
-*.iws
-.vscode/
+# Dependencies
+node_modules/
+vendor/
 
-# System
-.DS_Store
-Thumbs.db
-*.tmp
+# Python related (if any Python tools used)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Logs
 *.log
 
-# Environment
-.env
-.env.local
-*.env.*
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Kotlin Multiplatform
-.kotlin/
-konan/
+# Editor related
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 ```

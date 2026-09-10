@@ -1,5 +1,6 @@
 package com.example.hp.crypto
 
+import android.util.Base64
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator
 import org.bouncycastle.crypto.params.Argon2Parameters
 import java.security.SecureRandom
@@ -11,7 +12,7 @@ actual class AndroidCryptoProvider : CryptoProvider {
     
     private val random = SecureRandom()
     
-    override fun deriveKey(password: String, salt: ByteArray): ByteArray {
+    override fun deriveKey(password: String, salt: ByteArray, size: Int): ByteArray {
         val params = Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
             .withIterations(3)
             .withMemoryAsKB(65536)
@@ -22,40 +23,45 @@ actual class AndroidCryptoProvider : CryptoProvider {
         val generator = Argon2BytesGenerator()
         generator.init(params)
         
-        val keyBytes = ByteArray(32)
+        val keyBytes = ByteArray(size)
         generator.generateBytes(password.toCharArray(), keyBytes)
         return keyBytes
     }
     
-    override fun encrypt(data: ByteArray, key: ByteArray): ByteArray {
-        val iv = ByteArray(12)
-        random.nextBytes(iv)
+    override fun encrypt(key: ByteArray, data: ByteArray): Pair<ByteArray, ByteArray> {
+        val nonce = ByteArray(12)
+        random.nextBytes(nonce)
         
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         val secretKey = SecretKeySpec(key, "AES")
-        val gcmSpec = GCMParameterSpec(128, iv)
+        val gcmSpec = GCMParameterSpec(128, nonce)
         
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec)
-        val encrypted = cipher.doFinal(data)
+        val cipherText = cipher.doFinal(data)
         
-        return iv + encrypted
+        return Pair(cipherText, nonce)
     }
     
-    override fun decrypt(encryptedData: ByteArray, key: ByteArray): ByteArray {
-        val iv = encryptedData.copyOfRange(0, 12)
-        val ciphertext = encryptedData.copyOfRange(12, encryptedData.size)
-        
+    override fun decrypt(key: ByteArray, cipherText: ByteArray, nonce: ByteArray): String {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         val secretKey = SecretKeySpec(key, "AES")
-        val gcmSpec = GCMParameterSpec(128, iv)
+        val gcmSpec = GCMParameterSpec(128, nonce)
         
         cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmSpec)
-        return cipher.doFinal(ciphertext)
+        val decrypted = cipher.doFinal(cipherText)
+        return String(decrypted)
     }
     
-    override fun generateRandomBytes(size: Int): ByteArray {
+    override fun randomBytes(size: Int): ByteArray {
         val bytes = ByteArray(size)
         random.nextBytes(bytes)
         return bytes
+    }
+    
+    override fun encryptToken(token: String, salt: ByteArray): String {
+        // Для v1 просто хэшируем токен с солью и возвращаем Base64
+        // В реальной реализации можно шифровать токеном от Keystore
+        val hash = deriveKey(token, salt, 32)
+        return Base64.encodeToString(hash, Base64.NO_WRAP)
     }
 }
