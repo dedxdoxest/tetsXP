@@ -57,11 +57,4 @@ actual class AndroidCryptoProvider : CryptoProvider {
         random.nextBytes(bytes)
         return bytes
     }
-    
-    override fun encryptToken(token: String, salt: ByteArray): String {
-        // Для v1 просто хэшируем токен с солью и возвращаем Base64
-        // В реальной реализации можно шифровать токеном от Keystore
-        val hash = deriveKey(token, salt, 32)
-        return Base64.encodeToString(hash, Base64.NO_WRAP)
-    }
 }

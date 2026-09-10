@@ -5,5 +5,4 @@ interface CryptoProvider {
     fun encrypt(key: ByteArray, data: ByteArray): Pair<ByteArray, ByteArray> // returns (ciphertext, nonce)
     fun decrypt(key: ByteArray, cipherText: ByteArray, nonce: ByteArray): String
     fun randomBytes(size: Int): ByteArray
-    fun encryptToken(token: String, salt: ByteArray): String
 }
